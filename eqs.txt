@@ -1,0 +1,26 @@
+(x*2+y+3)>=ox*2+1)//BLOCKSIZE
+
+y>=(oy*4//basesz[1]-1)//BLOCKSIZE//3-1
+
+
+
+
+largest x such that
+(x*2+y)*basesz[0]*BLOCKSIZE//2+BLOCKSIZE*3*basesz[0]//2<=ox
+is guarenteed
+
+(x*2+y)*basesz[0]*BLOCKSIZE+BLOCKSIZE*3*basesz[0]<=ox*2+1
+x*2+y+3<=(ox*2+1)//basesz[0]//BLOCKSIZE
+x<=((ox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2
+
+and for y
+y*basesz[1]*BLOCKSIZE*3//4+basesz[1]*(BLOCKSIZE*3+1)//4<=oy
+y*BLOCKSIZE*3+(BLOCKSIZE*3+1)<=(oy*4//basesz[1]-1)
+y<=(oy*4//basesz[1]-1)//BLOCKSIZE//3-1
+
+
+(x*2+y)>=(scalesz[0]+ox)*2//basesz[0]//BLOCKSIZE
+x>=((scalesz[0]+ox)*2//basesz[0]//BLOCKSIZE-y)//2
+
+y*basesz[1]*BLOCKSIZE*3//4-oy>=scalesz[1]
+y>=(scalesz[1]+oy)*4//basesz[1]//BLOCKSIZE//3
