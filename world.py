@@ -1,14 +1,17 @@
 from tools import *
-import buildings
+import buildings,player
 
-BLOCKSIZE=7
+BLOCKSIZE=3
 NLIST=[(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,-1),(1,-1),(-1,1)]
 VARIATIONS=[0.5,0.1,0.1,0.1]##a measure of how much terrain changes between blocks warning exponential
 RM=[0.1,0.1,0.1,0.1]##reversion to mean, must be float>0
 
+
 class Block():
     """a block of ~100 hexagons"""
     def __init__(self,pos):
+        check(pos not in blocks,"this block "+str(pos)+" has already been initialised")
+        blocks[pos]=self
         self.pos=x,y=pos
         self.neighbours={}
         for dx,dy in NLIST:
@@ -25,10 +28,9 @@ class Block():
         s=sum(self.ratios)
         for n in range(lent):self.ratios[n]/=s
         
-        self.cells=[[]for n in range(BLOCKSIZE)]
-        for row in self.cells:
-            for col in range(BLOCKSIZE):
-                row.append(terrains[self.randT()])
+        self.cells=[[Cell(terrains[self.randT()]) for col in range(BLOCKSIZE)]for n in range(BLOCKSIZE)]
+        self.verticies=[[[None,None] for col in range(BLOCKSIZE)]for n in range(BLOCKSIZE)]
+        self.edges=[[[None,None,None] for col in range(BLOCKSIZE)]for n in range(BLOCKSIZE)]
                 
     def newNeighbour(self,dx,dy,b):
         check((dx,dy) not in self.neighbours,"there is already a neighbour in this place!")
@@ -37,17 +39,38 @@ class Block():
     def randT(self):
         r=random.random()
         c=0
-        for n in range(len(self.ratios)):
-            c+=self.ratios[n]
+        for n,ratio in enumerate(self.ratios):
+            c+=ratio
             if r<c:return n
 
     def draw(self,surface,dx,dy):
+        l=[]
         for x,row in enumerate(self.cells):
             for y,cell in enumerate(row):
-                cell.draw((x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy,surface)
-            
-        
+                l.append(cell.draw((x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy,surface))
+        """for x,row in enumerate(self.verticies):
+            for y,cell in enumerate(row):
+                l.append(cell.draw((x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy,surface))"""
+        return l
 
+    def getHome(self):
+        for x in range(BLOCKSIZE-1):
+            for y in range(BLOCKSIZE-1):
+                for n,ds in enumerate([{(0,0),(0,1),(1,0)},{(1,1),(0,1),(1,0)}]):
+                    if {self.cells[x+dx][y+dy].terrain for dx,dy in ds}==set(terrains[1:]):
+                        return [(x,y,n),(x+1,y,n)][n]
+
+class Drawable:
+    def draw(self,x,y,surface):
+        abstract
+    def drawBy(self,x,y,surface,player):
+        if any(ob.player==player for ob in self.seenby):return self.draw(x,y,surface)
+
+class Cell(Drawable):
+    def __init__(self,terrain):
+        self.terrain=terrain
+    def draw(self,x,y,surface):
+        self.terrain.draw(x,y,surface)
 
 
 class Terrain():#there should be four of these
@@ -60,28 +83,38 @@ class Terrain():#there should be four of these
         surface.blit(self.image,(x,y))
 
 def init():
-    global blocks
+    global blocks,wspi
     blocks={}
-    blocks[0,0]=Block((0,0))
+    wspi=sqaspiral()
+    for pos in wspi:
+        x=Block(pos).getHome()
+        print(pos,x)
+        if x:break
+    #for n in range(0):Block(next(wspi))
+    #return player.Player(pos,blocks[pos].getHome())
     
-    for pos in NLIST:
-        blocks[pos]=Block(pos)
-        
+            
+def getCell(x,y):
+    if (x//BLOCKSIZE,y//BLOCKSIZE) in blocks:
+        return blocks[x//BLOCKSIZE,y//BLOCKSIZE].cells[x%BLOCKSIZE][y%BLOCKSIZE]
+    else:
+        return Block((x//BLOCKSIZE,y//BLOCKSIZE)).cells[x%BLOCKSIZE][y%BLOCKSIZE]
 
 def draw(sur,ox,oy,scale):
+    """draws all of the world that is loaded onto a given screen"""
     bsz=(BLOCKSIZE*3*basesz[0]//2,basesz[1]*(BLOCKSIZE*3+1)//4)
     scalesz=(int(sur.get_width()//scale),int(sur.get_height()//scale))
-    dx,dy=int(ox//scale),int(oy//scale)
+    sox,soy=int(ox//scale),int(oy//scale)
     s2=pygame.Surface(scalesz)
-    for y in range((dy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+dy)*4//basesz[1]//BLOCKSIZE//3+1):
-        for x in range(((dx*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+dx)*2//basesz[0]//BLOCKSIZE-y)//2+1):
+    for y in range((soy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+soy)*4//basesz[1]//BLOCKSIZE//3+1):
+        for x in range(((sox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+sox)*2//basesz[0]//BLOCKSIZE-y)//2+1):
             if (x,y) in blocks:
-                blocks[x,y].draw(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-dx,y*basesz[1]*BLOCKSIZE*3//4-dy)
+                blocks[x,y].draw(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
     pygame.transform.smoothscale(s2,sur.get_size(),sur)
 
 
 #used for checking other images have the right dimensions
-base=pygame.image.load("basehex - copy.png")
+base=pygame.image.load("basehex.bmp")
 basesz=base.get_size()
 
 terrains=[Terrain("Water","water.bmp"),

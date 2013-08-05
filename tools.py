@@ -19,3 +19,33 @@ class MyError(Exception):
 def check(cond,msg):
     """raises an error if a condition is not True"""
     if not cond:raise MyError(msg)
+
+#match event to keypress
+class Key:
+    """a class which can be used to check if an event is a particular keypress"""
+    def __init__(self,key):
+        self.key=key
+    def __eq__(self,event):
+        return event.type==KEYDOWN and event.key==self.key
+
+def sqaspiral():
+    pos=0,0
+    direction=1,0
+    wait=True
+    while True:
+        yield pos
+        pos=pos[0]+direction[0],pos[1]+direction[1]
+        
+        if wait:
+            direction=-direction[1],direction[0]
+            wait=False
+        if abs(pos[0])==abs(pos[1]):
+            if direction==(1,0): wait=True
+            else: direction=-direction[1],direction[0]
+
+
+def tupIndex(arr,tup):
+    if len(tup)==0:return arr
+    else:return tupIndex(arr[tup[0]],tup[1:])
+
+sign=lambda x:Math.copysign(1,x)
