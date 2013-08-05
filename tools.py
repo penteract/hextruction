@@ -28,7 +28,7 @@ class Key:
     def __eq__(self,event):
         return event.type==KEYDOWN and event.key==self.key
 
-def sqaspiral():
+def sqaSpiral():
     pos=0,0
     direction=1,0
     wait=True
@@ -43,9 +43,14 @@ def sqaspiral():
             if direction==(1,0): wait=True
             else: direction=-direction[1],direction[0]
 
+def vertcor(n,w,h):
+    """returns the coordinates of a vertex relative to the top left of a hexagon"""
+    return [(w//2,h),(w,h*3//4)][n]
 
 def tupIndex(arr,tup):
     if len(tup)==0:return arr
     else:return tupIndex(arr[tup[0]],tup[1:])
 
-sign=lambda x:Math.copysign(1,x)
+sign=lambda x:math.copysign(1,x)
+
+

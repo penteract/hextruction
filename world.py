@@ -4,7 +4,7 @@ import buildings,player
 BLOCKSIZE=3
 NLIST=[(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,-1),(1,-1),(-1,1)]
 VARIATIONS=[0.5,0.1,0.1,0.1]##a measure of how much terrain changes between blocks warning exponential
-RM=[0.1,0.1,0.1,0.1]##reversion to mean, must be float>0
+RM=[0.05]*4##reversion to mean, must be float>0
 
 
 class Block():
@@ -37,21 +37,25 @@ class Block():
         self.neighbours[dx,dy]=b
 
     def randT(self):
-        r=random.random()
+        r=random.random()*0.8+0.2
         c=0
         for n,ratio in enumerate(self.ratios):
             c+=ratio
             if r<c:return n
+        
 
-    def draw(self,surface,dx,dy):
-        l=[]
+    def drawCells(self,surface,dx,dy):
         for x,row in enumerate(self.cells):
             for y,cell in enumerate(row):
-                l.append(cell.draw((x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy,surface))
-        """for x,row in enumerate(self.verticies):
-            for y,cell in enumerate(row):
-                l.append(cell.draw((x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy,surface))"""
-        return l
+                cell.draw(surface,(x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy)
+    def drawEdges(self,surface,dx,dy):
+        pass
+    def drawVerticies(self,surface,dx,dy):
+        for x,row in enumerate(zip(self.cells,self.verticies)):
+            for y,(cell,vs) in enumerate(zip(*row)):
+                tl=(x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy
+                for n in range(2):
+                    if vs[n]:vs[n].draw(surface,(x*2+y+2-n)*basesz[0]/2+dx,(y*3+3+n)*basesz[1]/4+dy)
 
     def getHome(self):
         for x in range(BLOCKSIZE-1):
@@ -61,7 +65,7 @@ class Block():
                         return [(x,y,n),(x+1,y,n)][n]
 
 class Drawable:
-    def draw(self,x,y,surface):
+    def draw(self,surface,x,y):
         abstract
     def drawBy(self,x,y,surface,player):
         if any(ob.player==player for ob in self.seenby):return self.draw(x,y,surface)
@@ -69,7 +73,7 @@ class Drawable:
 class Cell(Drawable):
     def __init__(self,terrain):
         self.terrain=terrain
-    def draw(self,x,y,surface):
+    def draw(self,surface,x,y):
         self.terrain.draw(x,y,surface)
 
 
@@ -85,13 +89,11 @@ class Terrain():#there should be four of these
 def init():
     global blocks,wspi
     blocks={}
-    wspi=sqaspiral()
+    wspi=sqaSpiral()
     for pos in wspi:
-        x=Block(pos).getHome()
-        print(pos,x)
-        if x:break
-    #for n in range(0):Block(next(wspi))
-    #return player.Player(pos,blocks[pos].getHome())
+        if Block(pos).getHome():break
+    for n in range(2000):Block(next(wspi))
+    return player.Player(pos,blocks[pos].getHome())
     
             
 def getCell(x,y):
@@ -109,7 +111,15 @@ def draw(sur,ox,oy,scale):
     for y in range((soy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+soy)*4//basesz[1]//BLOCKSIZE//3+1):
         for x in range(((sox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+sox)*2//basesz[0]//BLOCKSIZE-y)//2+1):
             if (x,y) in blocks:
-                blocks[x,y].draw(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
+                blocks[x,y].drawCells(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
+    for y in range((soy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+soy)*4//basesz[1]//BLOCKSIZE//3+1):
+        for x in range(((sox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+sox)*2//basesz[0]//BLOCKSIZE-y)//2+1):
+            if (x,y) in blocks:
+                blocks[x,y].drawEdges(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
+    for y in range((soy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+soy)*4//basesz[1]//BLOCKSIZE//3+1):
+        for x in range(((sox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+sox)*2//basesz[0]//BLOCKSIZE-y)//2+1):
+            if (x,y) in blocks:
+                blocks[x,y].drawVerticies(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
     pygame.transform.smoothscale(s2,sur.get_size(),sur)
 
 

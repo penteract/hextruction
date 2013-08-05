@@ -19,7 +19,7 @@ def main():
     pygame.display.set_caption('Hextruction')
     ##stick any loading screen here
     time=0
-    random.seed(50)
+    random.seed(52)
     global plyr
     plyr=world.init()
     x,y,scale=0,0,0##logscale

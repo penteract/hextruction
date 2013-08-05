@@ -5,9 +5,11 @@ class Building:
     cost=(0,0,0)
     capacity=(0,0,0)
     place=None
-    LOS=0
+    LOS=1
+    image=None
     #metal,wood,food
     def __init__(self,player,builder,block,pos):
+        rescources=[0,0,0]
         if self.place=="vertex":
             world.blocks[block].verticies[pos[0]][pos[1]][pos[2]]=self
         elif self.place=="edge":
@@ -23,17 +25,20 @@ class Building:
                 if abs(x+y)<=self.LOS:
                     world.getCell(x+x1,y+y1)
                     player.visible.add((x+x1,y+y1))
-    def draw(self,x,y,surface):
+    def draw(self,surface,x,y):
         surface.blit(self.image,(x,y))
-        
+
+
 
 class Settlement(Building):
     cost=(1,5,0)
     capacity=(100,100,100)
-    rescources=[0,0,0]
     place="vertex"
     LOS=3
     image=pygame.image.load("settlement.bmp")
-    def draw(self,x,y,surface):
-        surface.blit(self.image,(x,y))
+    image.set_colorkey((123,45,67))
+    def draw(self,surface,x,y):
+        x-=self.image.get_width()//2
+        y-=self.image.get_height()//2
+        super().draw(surface,x,y)
 
