@@ -1,7 +1,10 @@
 import random
 import math
+import itertools
 import pygame
 from pygame.locals import *
+
+NLIST=[(1,0),(-1,0),(0,1),(0,-1),(1,-1),(-1,1),(1,1),(-1,-1)]
 
 #error handling
 class Show(Exception):
@@ -43,6 +46,17 @@ def sqaSpiral():
             if direction==(1,0): wait=True
             else: direction=-direction[1],direction[0]
 
+def hexSpiral(r=-1):
+    pos=0,0
+    yield pos
+    for n in itertools.count():
+        if n==r:break
+        pos=pos[0]+1,pos[1]
+        for dx,dy in [(-1,1),(-1,0),(0,-1),(1,-1),(1,0),(0,1)]:
+            for m in range(n+1):
+                yield pos
+                pos=pos[0]+dx,pos[1]+dy
+
 def vertcor(n,w,h):
     """returns the coordinates of a vertex relative to the top left of a hexagon"""
     return [(w//2,h),(w,h*3//4)][n]
@@ -50,6 +64,12 @@ def vertcor(n,w,h):
 def tupIndex(arr,tup):
     if len(tup)==0:return arr
     else:return tupIndex(arr[tup[0]],tup[1:])
+
+def mean(l):
+    return sum(l)/len(l)
+
+def var(l):
+    return mean([x*x for x in l])-mean(l)**2
 
 sign=lambda x:math.copysign(1,x)
 

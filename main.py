@@ -14,15 +14,18 @@ def changescale(x,y,s,ds,centre):
 def main():
     size=width,height=512,512
     pygame.init()
-    clock=pygame.time.Clock()
-    screen=pygame.display.set_mode(size)
+    screen=pygame.display.set_mode((0,0),pygame.FULLSCREEN)
+    #screen=pygame.display.set_mode(size,pygame.NOFRAME)
+    size=width,height=screen.get_size()
     pygame.display.set_caption('Hextruction')
-    ##stick any loading screen here
+    ##stick any loading screen/menu here
+    clock=pygame.time.Clock()
     time=0
-    random.seed(52)
+    #random.seed(52)
     global plyr
     plyr=world.init()
     x,y,scale=0,0,0##logscale
+    
     while True:
         ##event checking
         for event in pygame.event.get():

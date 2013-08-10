@@ -1,11 +1,11 @@
 from tools import *
-import buildings,player
 
 BLOCKSIZE=3
-NLIST=[(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,-1),(1,-1),(-1,1)]
-VARIATIONS=[0.5,0.1,0.1,0.1]##a measure of how much terrain changes between blocks warning exponential
-RM=[0.05]*4##reversion to mean, must be float>0
+VARIATIONS=[0.1,0.1,0.1]##a measure of how much terrain changes between blocks warning exponential
+RM=[0.05,0.1,0.1]##reversion to mean, must be float>0
+OCHANGE=1.1
 
+drawby=None
 
 class Block():
     """a block of ~100 hexagons"""
@@ -14,7 +14,7 @@ class Block():
         blocks[pos]=self
         self.pos=x,y=pos
         self.neighbours={}
-        for dx,dy in NLIST:
+        for dx,dy in NLIST[:6]:
             if (x+dx,y+dy) in blocks:
                 b=blocks[(x+dx,y+dy)]
                 b.newNeighbour(-dx,-dy,self)
@@ -23,12 +23,19 @@ class Block():
         lent=len(terrains)
         self.ratios=[RM[n]/lent+sum([b.ratios[n] for b in self.neighbours.values()])
                      for n in range(lent)]
+        if len(self.neighbours)==0:self.ocean=0
+        else:
+            no=[b.ocean for b in self.neighbours.values()]
+            self.ocean=mean(no)/OCHANGE if len(self.neighbours)!=0 else 0
+            if all([x<0.8 for x in no]) or all([x>0.2 for x in no]):self.ocean+=random.choice([-0.5,-0.4,0,0.4,0.5])
+        #print(self.ocean)-
+        #+random.gauss(0,0.5)
         for n in range(lent):
             self.ratios[n]*=random.lognormvariate(0,VARIATIONS[n])
         s=sum(self.ratios)
         for n in range(lent):self.ratios[n]/=s
         
-        self.cells=[[Cell(terrains[self.randT()]) for col in range(BLOCKSIZE)]for n in range(BLOCKSIZE)]
+        self.cells=[[Cell(self.randT()) for col in range(BLOCKSIZE)]for n in range(BLOCKSIZE)]
         self.verticies=[[[None,None] for col in range(BLOCKSIZE)]for n in range(BLOCKSIZE)]
         self.edges=[[[None,None,None] for col in range(BLOCKSIZE)]for n in range(BLOCKSIZE)]
                 
@@ -37,11 +44,12 @@ class Block():
         self.neighbours[dx,dy]=b
 
     def randT(self):
-        r=random.random()*0.8+0.2
+        r=random.random()
         c=0
+        if ((r*113)%1)<self.ocean:return water
         for n,ratio in enumerate(self.ratios):
             c+=ratio
-            if r<c:return n
+            if r<c:return terrains[n]
         
 
     def drawCells(self,surface,dx,dy):
@@ -61,14 +69,15 @@ class Block():
         for x in range(BLOCKSIZE-1):
             for y in range(BLOCKSIZE-1):
                 for n,ds in enumerate([{(0,0),(0,1),(1,0)},{(1,1),(0,1),(1,0)}]):
-                    if {self.cells[x+dx][y+dy].terrain for dx,dy in ds}==set(terrains[1:]):
+                    if {self.cells[x+dx][y+dy].terrain for dx,dy in ds}==set(terrains):
                         return [(x,y,n),(x+1,y,n)][n]
 
 class Drawable:
+    seenby=set()
     def draw(self,surface,x,y):
         abstract
-    def drawBy(self,x,y,surface,player):
-        if any(ob.player==player for ob in self.seenby):return self.draw(x,y,surface)
+    def drawBy(self,x,y,surface):
+        if any(ob.player==drawby for ob in self.seenby):return self.draw(x,y,surface)
 
 class Cell(Drawable):
     def __init__(self,terrain):
@@ -92,15 +101,17 @@ def init():
     wspi=sqaSpiral()
     for pos in wspi:
         if Block(pos).getHome():break
-    for n in range(2000):Block(next(wspi))
+    #for n in range(2000):Block(next(wspi))
     return player.Player(pos,blocks[pos].getHome())
     
             
 def getCell(x,y):
     if (x//BLOCKSIZE,y//BLOCKSIZE) in blocks:
-        return blocks[x//BLOCKSIZE,y//BLOCKSIZE].cells[x%BLOCKSIZE][y%BLOCKSIZE]
+        b=blocks[x//BLOCKSIZE,y//BLOCKSIZE]
     else:
-        return Block((x//BLOCKSIZE,y//BLOCKSIZE)).cells[x%BLOCKSIZE][y%BLOCKSIZE]
+        b=Block((x//BLOCKSIZE,y//BLOCKSIZE))
+    contents=[c[x%BLOCKSIZE][y%BLOCKSIZE] for c in (b.cells,b.edges,b.verticies)]
+    return [contents[0]]+list(contents[1])+list(contents[2])
 
 def draw(sur,ox,oy,scale):
     """draws all of the world that is loaded onto a given screen"""
@@ -127,8 +138,11 @@ def draw(sur,ox,oy,scale):
 base=pygame.image.load("basehex.bmp")
 basesz=base.get_size()
 
-terrains=[Terrain("Water","water.bmp"),
-          Terrain("Mountain","mountain.bmp"),
+terrains=[Terrain("Mountain","mountain.bmp"),
           Terrain("Forest","forest.bmp"),
           Terrain("Fields","field.bmp")]
+
+water=Terrain("Water","water.bmp")
+          
     
+import buildings,player
