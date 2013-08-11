@@ -3,7 +3,7 @@ from tools import *
 BLOCKSIZE=3
 VARIATIONS=[0.1,0.1,0.1]##a measure of how much terrain changes between blocks warning exponential
 RM=[0.05,0.1,0.1]##reversion to mean, must be float>0
-OCHANGE=1.1
+OCHANGE=1.1##>1
 
 drawby=None
 
@@ -56,9 +56,11 @@ class Block():
         for x,row in enumerate(self.cells):
             for y,cell in enumerate(row):
                 cell.draw(surface,(x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy)
-    def drawEdges(self,surface,dx,dy):
+    def drawRoads(self,surface,dx,dy):
         pass
-    def drawVerticies(self,surface,dx,dy):
+    def drawVehicles(self,surface,dx,dy):
+        pass
+    def drawBuildings(self,surface,dx,dy):
         for x,row in enumerate(zip(self.cells,self.verticies)):
             for y,(cell,vs) in enumerate(zip(*row)):
                 tl=(x*2+y)*basesz[0]/2+dx,y*basesz[1]*3/4+dy
@@ -119,30 +121,38 @@ def draw(sur,ox,oy,scale):
     scalesz=(int(sur.get_width()//scale),int(sur.get_height()//scale))
     sox,soy=int(ox//scale),int(oy//scale)
     s2=pygame.Surface(scalesz)
+    blocksOnScreen=[]
     for y in range((soy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+soy)*4//basesz[1]//BLOCKSIZE//3+1):
         for x in range(((sox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+sox)*2//basesz[0]//BLOCKSIZE-y)//2+1):
             if (x,y) in blocks:
-                blocks[x,y].drawCells(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
-    for y in range((soy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+soy)*4//basesz[1]//BLOCKSIZE//3+1):
-        for x in range(((sox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+sox)*2//basesz[0]//BLOCKSIZE-y)//2+1):
-            if (x,y) in blocks:
-                blocks[x,y].drawEdges(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
-    for y in range((soy*4//basesz[1]-1)//BLOCKSIZE//3-1,(scalesz[1]+soy)*4//basesz[1]//BLOCKSIZE//3+1):
-        for x in range(((sox*2+1)//basesz[0]//BLOCKSIZE-y-3)//2,((scalesz[0]+sox)*2//basesz[0]//BLOCKSIZE-y)//2+1):
-            if (x,y) in blocks:
-                blocks[x,y].drawVerticies(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
+                blocksOnScreen.append((x,y))
+    for x,y in blocksOnScreen:
+        blocks[x,y].drawCells(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
+    for x,y in blocksOnScreen:
+        blocks[x,y].drawRoads(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
+    for x,y in blocksOnScreen:
+        blocks[x,y].drawVehicles(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
+    for x,y in blocksOnScreen:
+        blocks[x,y].drawBuildings(s2,(x*2+y)*basesz[0]*BLOCKSIZE//2-sox,y*basesz[1]*BLOCKSIZE*3//4-soy)
     pygame.transform.smoothscale(s2,sur.get_size(),sur)
 
 
 #used for checking other images have the right dimensions
-base=pygame.image.load("basehex.bmp")
+
+img="images/terrain/field.png"
+base=pygame.image.load(img)#"basehex.bmp")
 basesz=base.get_size()
 
-terrains=[Terrain("Mountain","mountain.bmp"),
+"""terrains=[Terrain("Mountain","mountain.bmp"),
           Terrain("Forest","forest.bmp"),
           Terrain("Fields","field.bmp")]
 
-water=Terrain("Water","water.bmp")
+water=Terrain("Water","water.bmp")"""
+terrains=[Terrain("Mountain",img),
+          Terrain("Forest",img),
+          Terrain("Fields",img)]
+
+water=Terrain("Water",img)
           
     
 import buildings,player

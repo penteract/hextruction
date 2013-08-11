@@ -14,8 +14,8 @@ def changescale(x,y,s,ds,centre):
 def main():
     size=width,height=512,512
     pygame.init()
-    screen=pygame.display.set_mode((0,0),pygame.FULLSCREEN)
-    #screen=pygame.display.set_mode(size,pygame.NOFRAME)
+    #screen=pygame.display.set_mode((0,0),pygame.FULLSCREEN)
+    screen=pygame.display.set_mode(size,pygame.NOFRAME)
     size=width,height=screen.get_size()
     pygame.display.set_caption('Hextruction')
     ##stick any loading screen/menu here

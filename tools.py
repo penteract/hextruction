@@ -28,6 +28,7 @@ class Key:
     """a class which can be used to check if an event is a particular keypress"""
     def __init__(self,key):
         self.key=key
+        self.type=KEYDOWN
     def __eq__(self,event):
         return event.type==KEYDOWN and event.key==self.key
 
