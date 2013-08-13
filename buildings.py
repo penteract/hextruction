@@ -1,7 +1,8 @@
 from tools import *
-import world
+import images
+import world##cross importing warning
 
-class Building(world.Drawable):
+class Building(images.Drawable):
     cost=(0,0,0)
     capacity=(0,0,0)
     place=None
@@ -25,20 +26,19 @@ class Building(world.Drawable):
             things=world.getCell(x+x1,y+y1)
             for item in things:
                 if item:item.seenby
-    def draw(self,surface,x,y):
-        surface.blit(self.image,(x,y))
+    def draw(self,surface,x,y,scale):
+        i=self.images[self.player.colnum][scale]
+        if self.place=="vertex":
+            surface.blit(i,(x-i.get_width()//2,y-i.get_height()//2))
+        else:
+            surface.blit(i,(x,y))
 
 
-
+@images.perPlayerDec
 class Settlement(Building):
     cost=(1,5,0)
     capacity=(100,100,100)
     place="vertex"
     LOS=100
-    image=pygame.image.load("settlement.bmp")
-    image.set_colorkey((123,45,67))
-    def draw(self,surface,x,y):
-        x-=self.image.get_width()//2
-        y-=self.image.get_height()//2
-        super().draw(surface,x,y)
+    imageName="buildings\\settlement_p"
 

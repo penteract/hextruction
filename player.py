@@ -1,9 +1,10 @@
 from tools import *
-import world
 import buildings
+import world##cross importing warning
 
 class Player:
-    def __init__(self,block,homepos):
+    def __init__(self,block,homepos,colnum):
+        self.colnum=colnum
         buildings.Settlement(self,None,block,homepos)
 
     def seen(self,object):

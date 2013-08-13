@@ -3,8 +3,13 @@ import math
 import itertools
 import pygame
 from pygame.locals import *
+import os.path
 
 NLIST=[(1,0),(-1,0),(0,1),(0,-1),(1,-1),(-1,1),(1,1),(-1,-1)]
+MAXZOOM=5
+TRANSCOL=(123,45,67)##colour used to indicate pixels should go transparent
+PLAYERCOL=(0,0,255)##colour used to indicate that the region should change colour by player
+MAXPLAYERS=3
 
 #error handling
 class Show(Exception):
@@ -31,6 +36,9 @@ class Key:
         self.type=KEYDOWN
     def __eq__(self,event):
         return event.type==KEYDOWN and event.key==self.key
+        
+def gridList(x1,x2,y1,y2):
+    return sum([[(x,y) for x in range(x1,x2)]for y in range(y1,y2)],[])
 
 def sqaSpiral():
     pos=0,0
