@@ -4,11 +4,18 @@ import buildings,player ##cross importing warning
 
 BLOCKSIZE=3
 VARIATIONS=[0.1,0.1,0.1]##a measure of how much terrain changes between blocks warning exponential
-RM=[0.05,0.1,0.1]##reversion to mean, must be float>0
+RM=[0.1,0.1,0.1]##reversion to mean, must be float>0
 OCHANGE=1.1##>1
 LAYERS=5
 
 drawby=None
+
+def hexpos(x,y,scale):
+    """returns the position of hexagon (x,y) at a given scale"""
+    return (x*2+y)*baseszs[scale][0]//2,(y*baseszs[scale][1]*3)//4
+def vertexpos(x,y,n,scale):
+    """returns the position of a vertex at a given scale"""
+    return (x*2+y+2-n)*baseszs[scale][0]//2,(y*3+3+n)*baseszs[scale][1]//4
 
 class Block():
     """a block of ~100 hexagons"""
@@ -57,17 +64,17 @@ class Block():
 
     def drawLayer(self,surface,dx,dy,layer,scale):
         bsz=baseszs[scale]
-        if layer==0:
-            for x,row in enumerate(self.cells):
-                for y,cell in enumerate(row):
-                    cell.draw(surface,(x*2+y)*bsz[0]/2+dx,y*bsz[1]*3/4+dy,scale)
-        
-        if layer==4:
-            for x,row in enumerate(zip(self.cells,self.verticies)):
-                for y,(cell,vs) in enumerate(zip(*row)):
-                    tl=(x*2+y)*bsz[0]/2+dx,y*bsz[1]*3/4+dy
-                    for n in range(2):
-                        if vs[n]:vs[n].draw(surface,(x*2+y+2-n)*bsz[0]/2+dx,(y*3+3+n)*bsz[1]/4+dy,scale)
+        for x in range(BLOCKSIZE):
+            for y in range(BLOCKSIZE):
+                if any(self.cells[x][y].seenby,lambda x:x.player==drawby):
+                    if layer==0:
+                        pos=hexpos(x,y,scale)
+                        self.cells[x][y].draw(surface,pos[0]+dx,pos[1]+dy,scale)
+                    if layer==4:
+                        for n in range(2):
+                            vs=self.verticies[x][y]
+                            pos=vertexpos(x,y,n,scale)
+                            if vs[n]:vs[n].draw(surface,pos[0]+dx,pos[1]+dy,scale)
 
     def getHome(self):
         for x in range(BLOCKSIZE-1):
@@ -78,21 +85,26 @@ class Block():
 
 def makeTerrain(n,imgFile):
     @images.setupImage
-    class Terrain(images.Drawable):
+    class Terrain():
         name=n
         imageName=os.path.join("terrains",imgFile)
+        def __init__(self):
+            self.seenby=set()
         def draw(self,surface,x,y,scale):
             surface.blit(self.images[scale],(x,y))
     return Terrain
 
-def init():
+def init(scale):
     global blocks,wspi
     blocks={}
     wspi=sqaSpiral()
     for pos in wspi:
-        if Block(pos).getHome():break
+        p2=Block(pos).getHome()
+        if p2:break
     #for n in range(2000):Block(next(wspi))
-    return player.Player(pos,blocks[pos].getHome(),0)
+    global drawby
+    drawby=player.Player(pos,p2,0)
+    return vertexpos(pos[0]*BLOCKSIZE+p2[0],pos[1]*BLOCKSIZE+p2[1],p2[2],scale)+(drawby,)
     
             
 def getCell(x,y):
@@ -100,8 +112,7 @@ def getCell(x,y):
         b=blocks[x//BLOCKSIZE,y//BLOCKSIZE]
     else:
         b=Block((x//BLOCKSIZE,y//BLOCKSIZE))
-    contents=[c[x%BLOCKSIZE][y%BLOCKSIZE] for c in (b.cells,b.edges,b.verticies)]
-    return [contents[0]]+list(contents[1])+list(contents[2])
+    return b.cells[x%BLOCKSIZE][y%BLOCKSIZE]
 
 def draw(sur,ox,oy,scale):
     """draws all of the world that is loaded onto a given screen"""
@@ -117,7 +128,8 @@ def draw(sur,ox,oy,scale):
     for y in range((soy*4//bsz[1]-1)//BLKSZ//3-1,(scalesz[1]+soy)*4//bsz[1]//BLKSZ//3+1):
         for x in range(((sox*2+1)//bsz[0]//BLKSZ-y-3)//2,((scalesz[0]+sox)*2//bsz[0]//BLKSZ-y)//2+1):
             if (x,y) in blocks:
-                blocksOnScreen.append((x,y,(x*2+y)*bsz[0]*BLKSZ//2-sox,y*bsz[1]*BLKSZ*3//4-soy))
+                pos=hexpos(x*BLKSZ,y*BLKSZ,s1)
+                blocksOnScreen.append((x,y,pos[0]-sox,pos[1]-soy))
     for layer in range(LAYERS):
         for x,y,dx,dy in blocksOnScreen:
             blocks[x,y].drawLayer(sur2,dx,dy,layer,s1)

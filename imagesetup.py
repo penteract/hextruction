@@ -60,4 +60,4 @@ def scaleims(resetall=False):
                             if not image:image=pygame.image.load(dname)
                             pygame.image.save(scale(image,n),newname)
 
-scaleims()
+scaleims(__name__=="__main__")

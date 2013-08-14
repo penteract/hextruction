@@ -24,10 +24,19 @@ def main():
     time=0
     random.seed(52)
     global plyr
-    plyr=world.init()
-    x,y,scale=0,0,0##logscale
+    scale=2##logscale
+    x,y,plyr=world.init(scale)
+    x-=width//2
+    y-=height//2
     
     while True:
+        ##painting the screen
+        world.draw(screen,x,y,scale)
+        pygame.display.update()
+        clock.tick(FPS)
+        time+=1
+        ##moving things
+        ##coll checking
         ##event checking
         for event in pygame.event.get():
             if event.type==pygame.QUIT or Key(K_ESCAPE)==event:
@@ -37,13 +46,6 @@ def main():
             if event.type==MOUSEMOTION and event.buttons[2]:
                 x-=event.rel[0]
                 y-=event.rel[1]
-        ##moving things
-        ##coll checking
-        ##painting the screen
-        world.draw(screen,x,y,scale)
-        pygame.display.update()
-        clock.tick(FPS)
-        time+=1
 
 try: main()
 finally:pygame.quit()

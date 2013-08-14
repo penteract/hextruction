@@ -1,11 +1,4 @@
 from tools import *
-    
-class Drawable:
-    seenby=set()
-    def draw(self,surface,x,y):
-        abstract
-    def drawBy(self,x,y,surface):
-        if any(ob.player==drawby for ob in self.seenby):return self.draw(x,y,surface)
  
 def makename(*parts,ext=".png"):
     return os.path.join("images","_".join([str(part) for part in parts]+[ext]))

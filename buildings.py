@@ -2,7 +2,7 @@ from tools import *
 import images
 import world##cross importing warning
 
-class Building(images.Drawable):
+class Building():
     cost=(0,0,0)
     capacity=(0,0,0)
     place=None
@@ -23,9 +23,7 @@ class Building(images.Drawable):
         x1=pos[0]+block[0]*world.BLOCKSIZE
         y1=pos[1]+block[1]*world.BLOCKSIZE
         for x,y in hexSpiral(self.LOS):
-            things=world.getCell(x+x1,y+y1)
-            for item in things:
-                if item:item.seenby
+            world.getCell(x+x1,y+y1).seenby.add(self)
     def draw(self,surface,x,y,scale):
         i=self.images[self.player.colnum][scale]
         if self.place=="vertex":
@@ -39,6 +37,6 @@ class Settlement(Building):
     cost=(1,5,0)
     capacity=(100,100,100)
     place="vertex"
-    LOS=100
+    LOS=5
     imageName="buildings\\settlement_p"
 

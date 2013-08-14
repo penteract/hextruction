@@ -1,6 +1,6 @@
 import random
 import math
-import itertools
+import itertools,operator
 import pygame
 from pygame.locals import *
 import os.path
@@ -79,6 +79,9 @@ def mean(l):
 
 def var(l):
     return mean([x*x for x in l])-mean(l)**2
+
+def any(it,func=lambda x:x):
+	return __builtins__["any"]((func(x) for x in it))
 
 sign=lambda x:math.copysign(1,x)
 
