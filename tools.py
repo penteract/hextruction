@@ -1,6 +1,7 @@
 import random
 import math
-import itertools,operator
+import itertools
+from operator import *
 import pygame
 from pygame.locals import *
 import os.path
@@ -10,7 +11,8 @@ MAXZOOM=5
 TRANSCOL=(123,45,67)##colour used to indicate pixels should go transparent
 PLAYERCOL=(0,0,255)##colour used to indicate that the region should change colour by player
 MAXPLAYERS=3
-
+LAYERS=5
+baseszs=[]#set in images
 #error handling
 class Show(Exception):
     def __init__(self,s):
@@ -66,9 +68,22 @@ def hexSpiral(r=-1):
                 yield pos
                 pos=pos[0]+dx,pos[1]+dy
 
-def vertcor(n,w,h):
-    """returns the coordinates of a vertex relative to the top left of a hexagon"""
-    return [(w//2,h),(w,h*3//4)][n]
+def hexpos(x,y,scale):
+    """returns the position of hexagon (x,y) at a given scale"""
+    return (x*2+y)*baseszs[scale][0]//2,(y*baseszs[scale][1]*3)//4
+def vertexpos(x,y,n,scale):
+    """returns the position of a vertex at a given scale"""
+    check(n in (0,1),"invalid vertex number")
+    return (x*2+y+2-n)*baseszs[scale][0]//2,(y*3+3+n)*baseszs[scale][1]//4
+def edgepos(x,y,n,scale):
+    """returns the position of a edge at a given scale"""
+    check(n in (0,1,2),"invalid edge number")
+    if n==0:return vertexpos(x+1,y-1,1,scale)
+    if n==2:return vertexpos(x-1,y,0,scale)
+    return (x*2+y+1)*baseszs[scale][0]//2,(y*3+3)*baseszs[scale][1]//4
+
+def dist(x,y):
+    return math.sqrt(x**2+y**2)
 
 def tupIndex(arr,tup):
     if len(tup)==0:return arr
@@ -85,4 +100,47 @@ def any(it,func=lambda x:x):
 
 sign=lambda x:math.copysign(1,x)
 
+def printcur(cur):
+	w=cur[0][0]//8
+	for y in range(cur[0][1]):
+		for x in range(w):
+			h=bin(cur[2][y*w+x])[2:].rjust(8,"0")
+			a=bin(cur[3][y*w+x])[2:].rjust(8,"0")
+			print(*map(lambda a,b:(a=="1")+2*(b=="1"),h,a),end="",sep="")
+		print()
 
+def makecur(s,hotspot):
+    """3 black, 2 white, 0 transparent, 1 invert"""
+    l=[x for x in s.split("\n") if x]
+    h=len(l)
+    w=len(l[0])
+    assert not w%8
+    a=[]
+    o=[]
+    for row in l:
+        assert len(row)==w
+        for x in range(w//8):
+            byte=list(map(int,row[x*8:(x+1)*8]))
+            a.append(sum([2**(7-p)*(v>=2) for p,v in enumerate(byte)]))
+            o.append(sum([2**(7-p)*(v%2) for p,v in enumerate(byte)]))
+    return ((h,w),hotspot,tuple(o),tuple(a))
+
+road=makecur("""
+0000000000000000
+0000000000000000
+0000000000000000
+0000000000000111
+0000000000111333
+0000000111333333
+0000111333333333
+0111333333333331
+1333333333331110
+3333333331110000
+3333331110000000
+3331110000000000
+1110000000000000
+0000000000000000
+0000000000000000
+0000000000000000
+""",(8,8))
+show=[None]

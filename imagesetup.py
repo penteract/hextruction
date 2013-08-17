@@ -36,28 +36,37 @@ def replace(image,oldcol,newcol):
     newSurf.unlock()
     return newSurf
     
+def makeScales(name,image,resetall,mtime):
+    for n in range(MAXZOOM):
+        newname=name+"_"+str(n)+"_.png"
+        if resetall or not os.path.isfile(newname) or os.path.getmtime(newname)<mtime:
+            pygame.image.save(scale(image(),n),newname)
+            
+def perPlayer(name,image,resetall):
+    return [(name+"_"+str(p),potential(lambda:replace(image(),PLAYERCOL,PLAYERCOLS[p])))for p in range(MAXPLAYERS)]
+
+
+class potential:
+    """a class which does not calculate a value until it is required"""
+    def __init__(self,f):
+        self.f=f
+        self.x=None
+    def __call__(self):
+        if self.x==None:self.x=self.f()
+        return self.x
+
 def scaleims(resetall=False):
     for dir,dirs,files in os.walk("images"):
         for file in files:
-            fname,ext=os.path.splitext(file)
-            if ext==".png" and not fname[-1]=="_":
-                dname=os.path.join(dir,file)
-                mtime=os.path.getmtime(dname)
-                image=None
-                if fname.endswith("_p"):
-                    for p in range(MAXPLAYERS):
-                        imcol=None
-                        for n in range(MAXZOOM):
-                            newname=os.path.join(dir,fname+"_"+str(p)+"_"+str(n)+"_.png")
-                            if resetall or not os.path.isfile(newname) or os.path.getmtime(newname)<mtime:
-                                if not image:image=pygame.image.load(dname)
-                                if not imcol:imcol=replace(image,PLAYERCOL,PLAYERCOLS[p])
-                                pygame.image.save(scale(imcol,n),newname)
-                else:
-                    for n in range(MAXZOOM):
-                        newname=os.path.join(dir,fname+"_"+str(n)+"_.png")
-                        if resetall or not os.path.isfile(newname) or os.path.getmtime(newname)<mtime:
-                            if not image:image=pygame.image.load(dname)
-                            pygame.image.save(scale(image,n),newname)
+            base,ext=os.path.splitext(file)
+            if ext==".png" and not base[-1]=="_":
+                file=os.path.join(dir,file)
+                name=os.path.join(dir,base)
+                mtime=os.path.getmtime(file)
+                im=potential(lambda:pygame.image.load(file))
+                if name.endswith("_p"):
+                    l=perPlayer(name,im,resetall)
+                else: l=[(name,im)]
+                for name,image in l: makeScales(name,image,resetall,mtime)
 
 scaleims(__name__=="__main__")
