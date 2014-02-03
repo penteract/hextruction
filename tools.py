@@ -81,6 +81,11 @@ def edgepos(x,y,n,scale):
     if n==0:return vertexpos(x+1,y-1,1,scale)
     if n==2:return vertexpos(x-1,y,0,scale)
     return (x*2+y+1)*baseszs[scale][0]//2,(y*3+3)*baseszs[scale][1]//4
+    
+def cansee(ob,rect):
+    """returns true if anything within the object's(either a vehicle or a building) line  is inside the rectangle"""
+    top,left,bottom,right=rect
+    
 
 def dist(x,y):
     return math.sqrt(x**2+y**2)

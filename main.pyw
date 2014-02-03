@@ -1,5 +1,5 @@
 from tools import *
-FPS=30
+FPS=10
 
 def main():
     global players,l
@@ -21,11 +21,11 @@ def main():
         
         time+=1
 
-loading=pygame.image.load("images/loading/loading_.png")
+loading=pygame.image.load("images/loading/loading_i.png")
 
 if __name__=="__main__":
     try:
-        size=512,512
+        size=1024,1024
         pygame.init()
         #screen=pygame.display.set_mode((0,0),pygame.FULLSCREEN)
         screen=pygame.display.set_mode(size)

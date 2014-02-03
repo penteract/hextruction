@@ -8,8 +8,10 @@ class Player:
         self.buildings=[]
         self.vehicles=[]
         self.seen={}
-        builder=type("",(),{"player":self,"resources":[100,100,100]})
+        builder=type("",(),{"player":self,"resources":[10000,10000,10000]})
         buildings.Settlement(builder,homepos)
+        #for x in range(200):
+        #    buildings.Settlement(builder,(0,100*x,0))
         buildings.Road(builder,homepos)
     def go(self):
         pass

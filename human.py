@@ -53,15 +53,17 @@ class Human(player.Player):
         cellsOnScreen=set()
         visible=set()
         
-        bsz=baseszs[s1]
+        bsz= baseszs[s1]
         
-        #draw background cells
+        ##draw background cells
         for y in range((soy*4//bsz[1]-1)//3-1,(scalesz[1]+soy)*4//bsz[1]//3+1):
             for x in range(((sox*2+1)//bsz[0]-y-3)//2,((scalesz[0]+sox)*2//bsz[0]-y)//2+1):
                 if (x,y) in self.seen:
                     self.seen[x,y].draw(sur2,sox,soy,0,s1)
                     cellsOnScreen.add((x,y))
         show[0]=[]
+
+        ##this is slow as buildings overlap. better to iterate through cellsonscreen
         for ob in self.vehicles+self.buildings:
             if ob.cansee(None):
                 for x,y,cell in ob.visible():

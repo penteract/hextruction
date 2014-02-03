@@ -59,7 +59,7 @@ def scaleims(resetall=False):
     for dir,dirs,files in os.walk("images"):
         for file in files:
             base,ext=os.path.splitext(file)
-            if ext==".png" and not base[-1]=="_":
+            if ext==".png" and not base[-1]=="_" and not base.endswith("_i"):
                 file=os.path.join(dir,file)
                 name=os.path.join(dir,base)
                 mtime=os.path.getmtime(file)

@@ -50,7 +50,7 @@ class Settlement(Building):
     cost=(1,5,0)
     capacity=(100,100,100)
     place="vertex"
-    LOS=5
+    LOS=20
     imageName=os.path.join("buildings","settlement")
 
 @images.roadDec
